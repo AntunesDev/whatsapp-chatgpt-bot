@@ -3,7 +3,7 @@ const axios = require("axios");
 async function responderComOllama(prompt) {
     try {
         const res = await axios.post("http://127.0.0.1:11434/api/generate", {
-            model: "deepseek-chat",
+            model: process.env.OLLAMA_MODEL,
             prompt,
             stream: false,
         });

@@ -43,17 +43,17 @@ function verificarEIniciarOllama() {
 }
 
 function verificarModelo() {
-    console.log("🧠 Verificando modelo 'deepseek-chat' no Ollama...");
+    console.log(`🧠 Verificando modelo '${process.env.OLLAMA_MODEL}' no Ollama...`);
 
     try {
-        execSync("ollama run deepseek-chat --dry-run", { stdio: "ignore" });
-        console.log("✅ Modelo 'deepseek-chat' já disponível.");
+        execSync(`ollama run ${process.env.OLLAMA_MODEL} --dry-run`, { stdio: "ignore" });
+        console.log(`✅ Modelo '${process.env.OLLAMA_MODEL}' já disponível.`);
     } catch (err) {
-        console.log("📥 Modelo 'deepseek-chat' não encontrado. Baixando...");
+        console.log(`📥 Modelo '${process.env.OLLAMA_MODEL}' não encontrado. Baixando...`);
         try {
-            execSync("ollama pull deepseek-chat", { stdio: "inherit" });
+            execSync(`ollama pull ${process.env.OLLAMA_MODEL}`, { stdio: "inherit" });
         } catch (err) {
-            console.error("❌ Erro ao baixar modelo 'deepseek-chat':", err.message);
+            console.error(`❌ Erro ao baixar modelo '${process.env.OLLAMA_MODEL}':`, err.message);
             process.exit(1);
         }
     }
