@@ -7,6 +7,9 @@ const socketIo = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
+
+const { responderComOllama } = require("./ollamaService");
+
 const io = socketIo(server);
 
 app.use(express.static("public"));
@@ -90,6 +93,30 @@ client.on("ready", async () => {
             console.log("📭 Nenhuma conversa carregada ainda... aguardando sincronização.");
         }
     }, 2000); // tenta a cada 2 segundos
+});
+
+client.on("message", async (msg) => {
+    // Ignorar se nenhum chat foi selecionado
+    if (!selectedChatId) return;
+
+    // Ignorar se não é do chat que foi selecionado
+    if (msg.from !== selectedChatId) return;
+
+    // Ignorar mensagens enviadas pelo próprio bot
+    if (msg.fromMe) return;
+
+    console.log(`📩 Nova mensagem em ${selectedChatId}: ${msg.body}`);
+
+    // Gera resposta com IA local
+    const resposta = await responderComOllama(`Responda de forma informal e direta como se fosse um amigo no WhatsApp. Mensagem: "${msg.body}"`);
+
+    // Envia resposta
+    try {
+        await msg.reply(resposta);
+        console.log("💬 Resposta enviada com sucesso.");
+    } catch (err) {
+        console.error("❌ Erro ao enviar resposta:", err.message);
+    }
 });
 
 client.on("auth_failure", (msg) => {
