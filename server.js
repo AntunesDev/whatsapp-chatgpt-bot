@@ -43,17 +43,17 @@ function verificarEIniciarOllama() {
 }
 
 function verificarModelo() {
-    console.log("🧠 Verificando modelo 'mistral' no Ollama...");
+    console.log("🧠 Verificando modelo 'deepseek-coder:6.7b' no Ollama...");
 
     try {
-        execSync("ollama run mistral --dry-run", { stdio: "ignore" });
-        console.log("✅ Modelo 'mistral' já disponível.");
+        execSync("ollama run deepseek-coder:6.7b --dry-run", { stdio: "ignore" });
+        console.log("✅ Modelo 'deepseek-coder:6.7b' já disponível.");
     } catch (err) {
-        console.log("📥 Modelo 'mistral' não encontrado. Baixando...");
+        console.log("📥 Modelo 'deepseek-coder:6.7b' não encontrado. Baixando...");
         try {
-            execSync("ollama pull mistral", { stdio: "inherit" });
+            execSync("ollama pull deepseek-coder:6.7b", { stdio: "inherit" });
         } catch (err) {
-            console.error("❌ Erro ao baixar modelo 'mistral':", err.message);
+            console.error("❌ Erro ao baixar modelo 'deepseek-coder:6.7b':", err.message);
             process.exit(1);
         }
     }
@@ -109,7 +109,7 @@ client.on("message", async (msg) => {
 
     io.emit("log_msg", { type: "received", content: msg.body });
 
-    const prompt = `${promptCustomizado}\nMensagem recebida: "${msg.body}"`;
+    const prompt = `${promptCustomizado}\n\nMensagem recebida no WhatsApp:\n"${msg.body}"\n\nResponda com clareza e naturalidade, da forma menos robotizada possível. Responda em português brasileiro, com liberdade para aplicar um 'sotaque' carioca onde possível.`;
 
     const resposta = await responderComOllama(prompt);
     await msg.reply(resposta);
