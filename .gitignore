@@ -1,0 +1,9 @@
+# Node
+node_modules/
+.env
+.DS_Store
+
+# WhatsApp auth session
+.session/
+.wwebjs_auth/
+.wwebjs_cache/
