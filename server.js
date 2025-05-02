@@ -9,66 +9,54 @@ const app = express();
 const server = http.createServer(app);
 
 const { responderComOllama } = require("./ollamaService");
+let ollamaProcess = null;
 
 const io = socketIo(server);
 
 app.use(express.static("public"));
 
 const { execSync, spawn } = require("child_process");
-const fs = require("fs");
 
-// Função para rodar comandos shell com segurança
-function executarComando(cmd, opcoes = {}) {
-    try {
-        execSync(cmd, { stdio: "inherit", ...opcoes });
-    } catch (err) {
-        console.error(`❌ Erro ao executar comando: ${cmd}`);
-        console.error(err.message);
-    }
-}
-
-// Verifica se já tem um processo do ollama rodando
 function estaRodandoOllama() {
     try {
-        const output = execSync("pgrep -f 'ollama serve'").toString().trim();
-        return !!output;
+        const output = execSync('tasklist').toString();
+        return output.toLowerCase().includes('ollama.exe');
     } catch (err) {
         return false;
     }
 }
 
-function iniciarOllama() {
-    if (estaRodandoOllama()) {
-        console.log("🟢 Ollama já está rodando. Não será iniciado novamente.");
-        return;
-    }
+function verificarEIniciarOllama() {
+    if (!estaRodandoOllama()) {
+        console.log("🚀 Iniciando Ollama local em segundo plano...");
+        ollamaProcess = spawn("ollama", ["serve"], {
+            stdio: ["ignore", "ignore", "ignore"]
+        });
 
-    console.log("🚀 Iniciando Ollama local em segundo plano...");
-    const processo = spawn("ollama", ["serve"], {
-        detached: true,
-        stdio: "ignore",
-    });
-    processo.unref();
+        setTimeout(() => {
+            verificarModelo();
+        }, 4000);
+    } else {
+        console.log("🟢 Ollama já está rodando.");
+        verificarModelo();
+    }
 }
 
-// Verifica se modelo "mistral" está instalado
-function verificarEIniciarOllama() {
+function verificarModelo() {
     console.log("🧠 Verificando modelo 'mistral' no Ollama...");
 
     try {
-        const modelos = execSync("ollama list").toString();
-        if (!modelos.includes("mistral")) {
-            console.log("📥 Modelo 'mistral' não encontrado. Baixando...");
-            executarComando("ollama pull mistral");
-        } else {
-            console.log("✅ Modelo 'mistral' já instalado.");
-        }
+        execSync("ollama run mistral --dry-run", { stdio: "ignore" });
+        console.log("✅ Modelo 'mistral' já disponível.");
     } catch (err) {
-        console.error("❌ Ollama não parece estar instalado ou acessível.");
-        process.exit(1);
+        console.log("📥 Modelo 'mistral' não encontrado. Baixando...");
+        try {
+            execSync("ollama pull mistral", { stdio: "inherit" });
+        } catch (err) {
+            console.error("❌ Erro ao baixar modelo 'mistral':", err.message);
+            process.exit(1);
+        }
     }
-
-    iniciarOllama();
 }
 
 let selectedChatId = null;
@@ -93,7 +81,6 @@ client.on("ready", async () => {
 
     console.log("⏳ Aguardando sincronização das conversas...");
 
-    // Verificador periódico
     const syncInterval = setInterval(async () => {
         const chats = await client.getChats();
 
@@ -111,26 +98,21 @@ client.on("ready", async () => {
         } else {
             console.log("📭 Nenhuma conversa carregada ainda... aguardando sincronização.");
         }
-    }, 2000); // tenta a cada 2 segundos
+    }, 2000);
 });
 
 client.on("message", async (msg) => {
-    // Ignorar se nenhum chat foi selecionado
     if (!selectedChatId) return;
 
-    // Ignorar se não é do chat que foi selecionado
     if (msg.from !== selectedChatId) return;
 
-    // Ignorar mensagens enviadas pelo próprio bot
     if (msg.fromMe) return;
 
     console.log(`📩 Nova mensagem em ${selectedChatId}: ${msg.body}`);
     io.emit("log_msg", { type: "received", content: msg.body });
 
-    // Gera resposta com IA local
     const resposta = await responderComOllama(`Responda de forma informal e direta como se fosse um amigo no WhatsApp. Mensagem: "${msg.body}"`);
 
-    // Envia resposta
     try {
         await msg.reply(resposta);
         io.emit("log_msg", { type: "sent", content: resposta });
@@ -150,7 +132,6 @@ client.on("disconnected", (reason) => {
 
 client.initialize();
 
-// socket deve ficar fora do client.ready
 io.on("connection", (socket) => {
     console.log("🖥️ Interface conectada");
 
