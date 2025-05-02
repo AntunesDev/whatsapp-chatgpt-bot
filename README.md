@@ -34,3 +34,49 @@ Este é um projeto pessoal feito com Node.js que conecta ao seu WhatsApp localme
 git clone https://github.com/AntunesDev/whatsapp-chatgpt-bot.git
 cd whatsapp-chatgpt-bot
 ```
+
+2. Instale as dependências:
+
+```bash
+npm install
+```
+
+3. Crie um arquivo .env com sua chave da OpenAI:
+
+```ini
+OPENAI_API_KEY=sua_chave_aqui
+```
+
+4. Inicie o projeto:
+
+```bash
+node server.js
+```
+
+5. Escaneie o QR Code com seu WhatsApp.
+
+---
+
+## 🧠 Como funciona?
+
+O projeto conecta-se ao WhatsApp e monitora as mensagens recebidas.
+
+Quando ativado, ele responde automaticamente à conversa selecionada usando respostas geradas pela IA (ChatGPT).
+
+A IA simula seu estilo de escrita, e pode ser treinada com um prompt inicial (em breve).
+
+---
+
+## 📝 Licença
+
+MIT — sinta-se livre para usar, modificar e contribuir.
+
+---
+
+## 📌 Avisos
+
+O uso da API da OpenAI pode gerar custos, dependendo da quantidade de mensagens.
+
+Este projeto é apenas para fins educacionais e pessoais.
+
+---
