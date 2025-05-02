@@ -11,6 +11,8 @@
       --primary: #25d366;
       --secondary: #1c1c1c;
       --border: #333;
+      --bot-msg: #1f2d25;
+      --user-msg: #1e1e1e;
     }
 
     body {
@@ -50,12 +52,12 @@
     ul {
       list-style: none;
       padding: 0;
-      margin: 0;
+      margin: 0 10px 10px 0;
       border: 1px solid var(--border);
       border-radius: 8px;
       background: var(--secondary);
       overflow: auto;
-      max-height: 200px;
+      max-height: 150px;
     }
 
     li {
@@ -73,138 +75,131 @@
       font-weight: bold;
     }
 
-    button {
+    textarea {
+      background: #1e1e1e;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: white;
+      padding: 8px;
       margin-top: 15px;
-      padding: 12px;
-      font-size: 16px;
+      resize: vertical;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 10px;
+      font-size: 15px;
       background-color: var(--primary);
       color: white;
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      transition: background 0.2s;
     }
 
-    button:disabled {
-      background-color: #555;
-      cursor: not-allowed;
-    }
-
-    .status {
-      display: flex;
-      align-items: center;
-      margin-top: 12px;
-      font-size: 14px;
-    }
-
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      margin-right: 8px;
-      background-color: red;
-      animation: pulse 1s infinite;
-    }
-
-    .dot.active {
-      background-color: #25d366;
-    }
-
-    @keyframes pulse {
-      0% { opacity: 0.5; }
-      50% { opacity: 1; }
-      100% { opacity: 0.5; }
-    }
-
-    .log {
-      background: #1a1a1a;
-      border: 1px solid var(--border);
+    .chat-log {
       margin-top: 20px;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 14px;
-      max-height: 250px;
+      padding: 10px;
+      border-radius: 10px;
+      background: var(--secondary);
+      border: 1px solid var(--border);
+      height: 300px;
       overflow-y: auto;
     }
 
-    .log-entry {
-      margin-bottom: 8px;
+    .msg {
+      margin: 6px 0;
+      max-width: 80%;
+      padding: 10px;
+      border-radius: 8px;
+      clear: both;
     }
 
-    .loading {
+    .msg.received {
+      background: var(--user-msg);
+      float: left;
+    }
+
+    .msg.sent {
+      background: var(--bot-msg);
+      float: right;
+    }
+
+    .status-line {
       font-size: 14px;
-      color: #aaa;
-      margin-bottom: 10px;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
   <header>🤖 WhatsApp AI Bot</header>
   <main>
-    <div id="loading" class="loading">🔄 Carregando conversas...</div>
     <h2>Selecione uma conversa:</h2>
     <ul id="chat-list"></ul>
 
-    <button id="start-btn" disabled>Ativar IA neste chat</button>
+    <textarea id="prompt" rows="3" placeholder="Ex: Responda como se fosse eu..."></textarea>
+    <button id="btn-toggle" disabled>⏸️ Pausar IA</button>
 
-    <div class="status">
-      <div class="dot" id="dot-status"></div>
-      <span id="status">IA inativa</span>
-    </div>
+    <div class="status-line" id="status">IA inativa</div>
 
-    <div class="log" id="log">
-      <strong>📝 Log de mensagens:</strong><br>
-    </div>
+    <div class="chat-log" id="log"></div>
   </main>
 
   <script>
     const socket = io();
     let chatSelecionado = null;
+    let iaAtiva = false;
 
-    const ul = document.getElementById("chat-list");
-    const btn = document.getElementById("start-btn");
-    const status = document.getElementById("status");
-    const dot = document.getElementById("dot-status");
+    const btnToggle = document.getElementById("btn-toggle");
     const log = document.getElementById("log");
-    const loading = document.getElementById("loading");
+    const promptInput = document.getElementById("prompt");
+    const status = document.getElementById("status");
 
-    const adicionarLog = (texto) => {
-      const linha = document.createElement("div");
-      linha.classList.add("log-entry");
-      linha.textContent = texto;
-      log.appendChild(linha);
+    const atualizarStatus = () => {
+      status.textContent = iaAtiva ? "IA ativa ✅" : "IA pausada ⏸️";
+      btnToggle.textContent = iaAtiva ? "⏸️ Pausar IA" : "▶️ Ativar IA";
+    };
+
+    const addMsg = (tipo, texto) => {
+      const div = document.createElement("div");
+      div.className = `msg ${tipo}`;
+      div.textContent = texto;
+      log.appendChild(div);
       log.scrollTop = log.scrollHeight;
     };
 
     socket.on("lista_chats", (chats) => {
-      loading.style.display = "none";
+      const ul = document.getElementById("chat-list");
       ul.innerHTML = "";
       chats.forEach((chat) => {
         const li = document.createElement("li");
         li.textContent = chat.name;
         li.onclick = () => {
           chatSelecionado = chat.id;
+          socket.emit("selecionar_chat", chat.id);
           document.querySelectorAll("li").forEach(el => el.classList.remove("selected"));
           li.classList.add("selected");
-          btn.disabled = false;
+          btnToggle.disabled = false;
         };
         ul.appendChild(li);
       });
     });
 
-    btn.onclick = () => {
-      if (chatSelecionado) {
-        socket.emit("selecionar_chat", chatSelecionado);
-        dot.classList.add("active");
-        status.textContent = "IA ativa neste chat";
-        adicionarLog("🟢 IA ativada para o chat selecionado.");
-      }
+    btnToggle.onclick = () => {
+      socket.emit("alternar_ia");
     };
 
-    // Para o log de mensagens
+    promptInput.onchange = () => {
+      socket.emit("atualizar_prompt", promptInput.value);
+    };
+
+    socket.on("estado_ia", ({ iaAtiva: ativo, promptCustomizado }) => {
+      iaAtiva = ativo;
+      promptInput.value = promptCustomizado;
+      atualizarStatus();
+    });
+
     socket.on("log_msg", ({ type, content }) => {
-      const prefix = type === "received" ? "📥" : "💬";
-      adicionarLog(`${prefix} ${content}`);
+      addMsg(type === "received" ? "received" : "sent", content);
     });
   </script>
 </body>

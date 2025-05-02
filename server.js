@@ -61,6 +61,9 @@ function verificarModelo() {
 
 let selectedChatId = null;
 let chatsDisponiveis = [];
+let iaAtiva = false;
+let promptCustomizado = 'Responda de forma informal e direta como se fosse um amigo no WhatsApp.';
+let isWhatsappReady = false;
 
 const client = new Client({
     authStrategy: new LocalAuth(),
@@ -102,24 +105,16 @@ client.on("ready", async () => {
 });
 
 client.on("message", async (msg) => {
-    if (!selectedChatId) return;
+    if (!selectedChatId || msg.from !== selectedChatId || msg.fromMe || !iaAtiva) return;
 
-    if (msg.from !== selectedChatId) return;
-
-    if (msg.fromMe) return;
-
-    console.log(`📩 Nova mensagem em ${selectedChatId}: ${msg.body}`);
     io.emit("log_msg", { type: "received", content: msg.body });
 
-    const resposta = await responderComOllama(`Responda de forma informal e direta como se fosse um amigo no WhatsApp. Mensagem: "${msg.body}"`);
+    const prompt = `${promptCustomizado}\nMensagem recebida: "${msg.body}"`;
 
-    try {
-        await msg.reply(resposta);
-        io.emit("log_msg", { type: "sent", content: resposta });
-        console.log("💬 Resposta enviada com sucesso.");
-    } catch (err) {
-        console.error("❌ Erro ao enviar resposta:", err.message);
-    }
+    const resposta = await responderComOllama(prompt);
+    await msg.reply(resposta);
+
+    io.emit("log_msg", { type: "sent", content: resposta });
 });
 
 client.on("auth_failure", (msg) => {
@@ -133,15 +128,28 @@ client.on("disconnected", (reason) => {
 client.initialize();
 
 io.on("connection", (socket) => {
-    console.log("🖥️ Interface conectada");
+    console.log("💻 Interface conectada via Socket.io");
 
-    if (chatsDisponiveis.length > 0) {
+    if (isWhatsappReady && chatsDisponiveis.length > 0) {
         socket.emit("lista_chats", chatsDisponiveis);
     }
 
     socket.on("selecionar_chat", (chatId) => {
         selectedChatId = chatId;
-        console.log("📥 Chat selecionado para IA:", chatId);
+        iaAtiva = true;
+        socket.emit("estado_ia", { iaAtiva, promptCustomizado });
+        console.log("📍 Chat ativado:", chatId);
+    });
+
+    socket.on("alternar_ia", () => {
+        iaAtiva = !iaAtiva;
+        io.emit("estado_ia", { iaAtiva, promptCustomizado });
+        console.log("⚙️ IA " + (iaAtiva ? "ativada" : "pausada"));
+    });
+
+    socket.on("atualizar_prompt", (novoPrompt) => {
+        promptCustomizado = novoPrompt;
+        console.log("📝 Prompt personalizado atualizado.");
     });
 });
 
