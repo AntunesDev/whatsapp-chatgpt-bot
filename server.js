@@ -11,6 +11,44 @@ const io = socketIo(server);
 
 app.use(express.static("public"));
 
+const { execSync, spawn } = require("child_process");
+const fs = require("fs");
+
+// Função para rodar comandos shell com segurança
+function executarComando(cmd, opcoes = {}) {
+    try {
+        execSync(cmd, { stdio: "inherit", ...opcoes });
+    } catch (err) {
+        console.error(`❌ Erro ao executar comando: ${cmd}`);
+        console.error(err.message);
+    }
+}
+
+// Verifica se modelo "mistral" está instalado
+function verificarEIniciarOllama() {
+    console.log("🧠 Verificando modelo 'mistral' no Ollama...");
+
+    try {
+        const modelos = execSync("ollama list").toString();
+        if (!modelos.includes("mistral")) {
+            console.log("📥 Modelo 'mistral' não encontrado. Baixando...");
+            executarComando("ollama pull mistral");
+        } else {
+            console.log("✅ Modelo 'mistral' já instalado.");
+        }
+    } catch (err) {
+        console.error("❌ Ollama não parece estar instalado ou acessível.");
+        process.exit(1);
+    }
+
+    console.log("🚀 Iniciando Ollama local em segundo plano...");
+    const processo = spawn("ollama", ["serve"], {
+        detached: true,
+        stdio: "ignore",
+    });
+    processo.unref();
+}
+
 let selectedChatId = null;
 let chatsDisponiveis = [];
 
@@ -78,6 +116,7 @@ io.on("connection", (socket) => {
     });
 });
 
+verificarEIniciarOllama();
 server.listen(3000, () => {
     console.log("🚀 Servidor rodando em http://localhost:3000");
 });
