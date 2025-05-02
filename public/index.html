@@ -5,9 +5,18 @@
   <title>WhatsApp AI Bot</title>
   <script src="/socket.io/socket.io.js"></script>
   <style>
+    :root {
+      --bg: #121212;
+      --fg: #e0e0e0;
+      --primary: #25d366;
+      --secondary: #1c1c1c;
+      --border: #333;
+    }
+
     body {
       font-family: sans-serif;
-      background-color: #f5f7fa;
+      background-color: var(--bg);
+      color: var(--fg);
       margin: 0;
       padding: 0;
       display: flex;
@@ -16,7 +25,7 @@
     }
 
     header {
-      background-color: #25d366;
+      background-color: var(--primary);
       color: white;
       padding: 16px;
       text-align: center;
@@ -26,50 +35,49 @@
 
     main {
       flex: 1;
-      padding: 24px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      max-width: 500px;
+      max-width: 600px;
       margin: auto;
     }
 
     h2 {
-      margin-top: 0;
       font-size: 18px;
+      margin: 0 0 10px 0;
     }
 
     ul {
       list-style: none;
       padding: 0;
       margin: 0;
-      border: 1px solid #ddd;
+      border: 1px solid var(--border);
       border-radius: 8px;
-      background: white;
+      background: var(--secondary);
       overflow: auto;
-      max-height: 300px;
+      max-height: 200px;
     }
 
     li {
       padding: 12px;
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid var(--border);
       cursor: pointer;
-      transition: background 0.2s;
     }
 
     li:hover {
-      background: #f0f0f0;
+      background: #1e1e1e;
     }
 
     li.selected {
-      background-color: #d1f5e0;
+      background-color: #2e4037;
       font-weight: bold;
     }
 
     button {
-      margin-top: 20px;
+      margin-top: 15px;
       padding: 12px;
       font-size: 16px;
-      background-color: #25d366;
+      background-color: var(--primary);
       color: white;
       border: none;
       border-radius: 6px;
@@ -78,37 +86,98 @@
     }
 
     button:disabled {
-      background-color: #ccc;
+      background-color: #555;
       cursor: not-allowed;
     }
 
-    button:hover:enabled {
-      background-color: #20bd5f;
+    .status {
+      display: flex;
+      align-items: center;
+      margin-top: 12px;
+      font-size: 14px;
     }
 
-    .status {
-      margin-top: 10px;
-      color: #333;
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 8px;
+      background-color: red;
+      animation: pulse 1s infinite;
+    }
+
+    .dot.active {
+      background-color: #25d366;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.5; }
+      50% { opacity: 1; }
+      100% { opacity: 0.5; }
+    }
+
+    .log {
+      background: #1a1a1a;
+      border: 1px solid var(--border);
+      margin-top: 20px;
+      padding: 12px;
+      border-radius: 8px;
       font-size: 14px;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .log-entry {
+      margin-bottom: 8px;
+    }
+
+    .loading {
+      font-size: 14px;
+      color: #aaa;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
   <header>🤖 WhatsApp AI Bot</header>
   <main>
+    <div id="loading" class="loading">🔄 Carregando conversas...</div>
     <h2>Selecione uma conversa:</h2>
     <ul id="chat-list"></ul>
 
     <button id="start-btn" disabled>Ativar IA neste chat</button>
-    <div class="status" id="status"></div>
+
+    <div class="status">
+      <div class="dot" id="dot-status"></div>
+      <span id="status">IA inativa</span>
+    </div>
+
+    <div class="log" id="log">
+      <strong>📝 Log de mensagens:</strong><br>
+    </div>
   </main>
 
   <script>
     const socket = io();
     let chatSelecionado = null;
 
+    const ul = document.getElementById("chat-list");
+    const btn = document.getElementById("start-btn");
+    const status = document.getElementById("status");
+    const dot = document.getElementById("dot-status");
+    const log = document.getElementById("log");
+    const loading = document.getElementById("loading");
+
+    const adicionarLog = (texto) => {
+      const linha = document.createElement("div");
+      linha.classList.add("log-entry");
+      linha.textContent = texto;
+      log.appendChild(linha);
+      log.scrollTop = log.scrollHeight;
+    };
+
     socket.on("lista_chats", (chats) => {
-      const ul = document.getElementById("chat-list");
+      loading.style.display = "none";
       ul.innerHTML = "";
       chats.forEach((chat) => {
         const li = document.createElement("li");
@@ -117,18 +186,26 @@
           chatSelecionado = chat.id;
           document.querySelectorAll("li").forEach(el => el.classList.remove("selected"));
           li.classList.add("selected");
-          document.getElementById("start-btn").disabled = false;
+          btn.disabled = false;
         };
         ul.appendChild(li);
       });
     });
 
-    document.getElementById("start-btn").onclick = () => {
+    btn.onclick = () => {
       if (chatSelecionado) {
         socket.emit("selecionar_chat", chatSelecionado);
-        document.getElementById("status").textContent = "✅ Chat ativado para respostas automáticas.";
+        dot.classList.add("active");
+        status.textContent = "IA ativa neste chat";
+        adicionarLog("🟢 IA ativada para o chat selecionado.");
       }
     };
+
+    // Para o log de mensagens
+    socket.on("log_msg", ({ type, content }) => {
+      const prefix = type === "received" ? "📥" : "💬";
+      adicionarLog(`${prefix} ${content}`);
+    });
   </script>
 </body>
 </html>

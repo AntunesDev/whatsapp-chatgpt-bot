@@ -106,6 +106,7 @@ client.on("message", async (msg) => {
     if (msg.fromMe) return;
 
     console.log(`📩 Nova mensagem em ${selectedChatId}: ${msg.body}`);
+    io.emit("log_msg", { type: "received", content: msg.body });
 
     // Gera resposta com IA local
     const resposta = await responderComOllama(`Responda de forma informal e direta como se fosse um amigo no WhatsApp. Mensagem: "${msg.body}"`);
@@ -113,6 +114,7 @@ client.on("message", async (msg) => {
     // Envia resposta
     try {
         await msg.reply(resposta);
+        io.emit("log_msg", { type: "sent", content: resposta });
         console.log("💬 Resposta enviada com sucesso.");
     } catch (err) {
         console.error("❌ Erro ao enviar resposta:", err.message);
