@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <title>WhatsApp AI Bot</title>
   <script src="/socket.io/socket.io.js"></script>
+  <style>
+    li { cursor: pointer; padding: 4px; }
+    li.selected { font-weight: bold; background-color: #efefef; }
+  </style>
 </head>
 <body>
   <h1>🤖 WhatsApp AI Bot</h1>
@@ -23,11 +27,10 @@
       chats.forEach((chat) => {
         const li = document.createElement("li");
         li.textContent = chat.name;
-        li.style.cursor = "pointer";
         li.onclick = () => {
           chatSelecionado = chat.id;
-          document.querySelectorAll("li").forEach(el => el.style.fontWeight = "normal");
-          li.style.fontWeight = "bold";
+          document.querySelectorAll("li").forEach(el => el.classList.remove("selected"));
+          li.classList.add("selected");
           document.getElementById("start-btn").disabled = false;
         };
         ul.appendChild(li);
@@ -37,7 +40,7 @@
     document.getElementById("start-btn").onclick = () => {
       if (chatSelecionado) {
         socket.emit("selecionar_chat", chatSelecionado);
-        alert("Chat ativado para respostas automáticas!");
+        alert("✅ Chat ativado para respostas automáticas.");
       }
     };
   </script>

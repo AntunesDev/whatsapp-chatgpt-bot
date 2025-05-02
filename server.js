@@ -1,8 +1,8 @@
 require("dotenv").config();
-const { Client, LocalAuth } = require("whatsapp-web.js");
-const qrcode = require("qrcode-terminal");
 const express = require("express");
 const http = require("http");
+const { Client, LocalAuth } = require("whatsapp-web.js");
+const qrcode = require("qrcode-terminal");
 const socketIo = require("socket.io");
 
 const app = express();
@@ -10,6 +10,9 @@ const server = http.createServer(app);
 const io = socketIo(server);
 
 app.use(express.static("public"));
+
+let selectedChatId = null;
+let chatsDisponiveis = [];
 
 const client = new Client({
     authStrategy: new LocalAuth(),
@@ -20,42 +23,36 @@ const client = new Client({
 });
 
 client.on("qr", (qr) => {
-    console.log("QR Code recebido, escaneie com o celular:");
+    console.log("📱 Escaneie o QR Code para conectar no WhatsApp:");
     qrcode.generate(qr, { small: true });
 });
 
-client.on("ready", () => {
-    console.log("✅ Cliente WhatsApp pronto!");
-});
-
-let selectedChatId = null;
-let chatsDisponiveis = [];
-
 client.on("ready", async () => {
-    console.log("✅ Cliente WhatsApp pronto!");
+    console.log("✅ Cliente WhatsApp conectado");
 
     const chats = await client.getChats();
     chatsDisponiveis = chats.map((chat) => ({
         id: chat.id._serialized,
-        name: chat.name || chat.formattedTitle || chat.id.user,
+        name: chat.name || chat.formattedTitle || chat.id.user || "Contato desconhecido",
     }));
 
-    // Quando um novo front-end se conecta
-    io.on("connection", (socket) => {
-        console.log("🖥️ Interface conectada");
+    console.log(`🔍 ${chatsDisponiveis.length} conversas carregadas`);
+});
 
-        // Envia lista de conversas ao front
+// socket deve ficar fora do client.ready
+io.on("connection", (socket) => {
+    console.log("🖥️ Interface conectada");
+
+    if (chatsDisponiveis.length > 0) {
         socket.emit("lista_chats", chatsDisponiveis);
+    }
 
-        socket.on("selecionar_chat", (chatId) => {
-            console.log("📥 Chat selecionado:", chatId);
-            selectedChatId = chatId; // guardar o chat selecionado
-        });
+    socket.on("selecionar_chat", (chatId) => {
+        selectedChatId = chatId;
+        console.log("📥 Chat selecionado para IA:", chatId);
     });
 });
 
-client.initialize();
-
 server.listen(3000, () => {
-    console.log("Servidor rodando em http://localhost:3000");
+    console.log("🚀 Servidor rodando em http://localhost:3000");
 });
