@@ -1,21 +1,28 @@
 {
   "name": "whatsapp-chatgpt-bot",
   "version": "1.0.0",
-  "description": "Este é um projeto pessoal feito com Node.js que conecta ao seu WhatsApp localmente e responde automaticamente às mensagens de uma conversa específica, simulando seu estilo de escrita com a ajuda da API do ChatGPT (OpenAI).",
+  "description": "Bot local que responde mensagens no WhatsApp com IA usando Node.js e Ollama",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "test-ollama": "node test-ollama.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "dotenv": "^16.5.0",
-    "express": "^5.1.0",
-    "openai": "^4.96.2",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
     "qrcode-terminal": "^0.12.0",
-    "socket.io": "^4.8.1",
-    "whatsapp-web.js": "^1.27.0"
-  }
+    "socket.io": "^4.7.2",
+    "whatsapp-web.js": "^1.22.1"
+  },
+  "keywords": [
+    "whatsapp",
+    "ollama",
+    "chatbot",
+    "nodejs",
+    "ai",
+    "local-llm"
+  ],
+  "author": "Seu Nome",
+  "license": "MIT"
 }

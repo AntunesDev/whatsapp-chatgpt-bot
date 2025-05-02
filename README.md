@@ -1,82 +1,81 @@
-# 🤖 WhatsApp ChatGPT Bot
+# 🤖 WhatsApp Chatbot com IA Local (Ollama + Node.js)
 
-Este é um projeto pessoal feito com Node.js que conecta ao seu WhatsApp localmente e responde automaticamente às mensagens de uma conversa específica, simulando seu estilo de escrita com a ajuda da API do ChatGPT (OpenAI).
+Este é um projeto pessoal que conecta ao seu WhatsApp localmente e responde automaticamente às mensagens de uma conversa específica, usando **IA local** via [Ollama](https://ollama.com/) — sem custos com OpenAI.
 
-> 🔒 Totalmente local. Nenhum dado é enviado para servidores externos além da OpenAI para gerar respostas.
+🔒 100% local. Nenhum dado é enviado para servidores externos (exceto se você optar por usar um modelo online no Ollama).
 
 ---
 
 ## 🚀 Funcionalidades
 
-- Conexão automática com seu WhatsApp via QR Code
-- Interface local com botão de ativar
-- Lista de conversas disponíveis
-- Seleção de uma conversa para ativar respostas automáticas
-- Respostas geradas pela IA da OpenAI, simulando sua forma de falar
+- Conexão com WhatsApp via QR Code
+- Interface web simples com seleção de conversas
+- Ativação manual de um chat para auto-resposta
+- Geração de respostas com modelo local (ex: `mistral`)
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
 - Node.js + Express
-- [whatsapp-web.js](https://github.com/pedroslopez/whatsapp-web.js)
+- whatsapp-web.js
+- Ollama (modelo local)
 - Socket.io
-- API da OpenAI (ChatGPT)
-- HTML/CSS simples
+- HTML/CSS básico
 
 ---
 
-## ⚙️ Instalação
+## 📦 Instalação
 
-1. Clone o repositório:
+### 1. Clone o repositório
 
-```bash
-git clone https://github.com/AntunesDev/whatsapp-chatgpt-bot.git
-cd whatsapp-chatgpt-bot
+```shell
+git clone https://github.com/seu-usuario/whatsapp-chatgpt-bot.git cd whatsapp-chatgpt-bot
 ```
 
-2. Instale as dependências:
+---
 
-```bash
+### 2. Instale as dependências
+
+```shell
 npm install
 ```
 
-3. Crie um arquivo .env com sua chave da OpenAI:
+---
 
-```ini
-OPENAI_API_KEY=sua_chave_aqui
+## 🧠 Configuração da IA com Ollama
+
+### 1. Instale o Ollama
+
+Baixe em: https://ollama.com/download  
+Disponível para Windows, macOS e Linux.
+
+### 2. Rode o modelo Mistral
+
+```shell
+ollama run mistral
 ```
-
-4. Inicie o projeto:
-
-```bash
-node server.js
-```
-
-5. Escaneie o QR Code com seu WhatsApp.
 
 ---
 
-## 🧠 Como funciona?
+## ▶️ Iniciando o projeto
 
-O projeto conecta-se ao WhatsApp e monitora as mensagens recebidas.
+```shell
+npm start
+```
 
-Quando ativado, ele responde automaticamente à conversa selecionada usando respostas geradas pela IA (ChatGPT).
+Abra o navegador em `http://localhost:3000`, escaneie o QR Code com seu WhatsApp e selecione uma conversa.
 
-A IA simula seu estilo de escrita, e pode ser treinada com um prompt inicial (em breve).
+---
+
+## 📁 Estrutura do Projeto
+
+- `server.js`: lógica principal, conexão com WhatsApp
+- `public/index.html`: interface do usuário
+- `ollamaService.js`: integração com a IA local via HTTP
 
 ---
 
 ## 📝 Licença
 
 MIT — sinta-se livre para usar, modificar e contribuir.
-
----
-
-## 📌 Avisos
-
-O uso da API da OpenAI pode gerar custos, dependendo da quantidade de mensagens.
-
-Este projeto é apenas para fins educacionais e pessoais.
-
----
