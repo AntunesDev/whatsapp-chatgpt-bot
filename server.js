@@ -27,6 +27,30 @@ function executarComando(cmd, opcoes = {}) {
     }
 }
 
+// Verifica se já tem um processo do ollama rodando
+function estaRodandoOllama() {
+    try {
+        const output = execSync("pgrep -f 'ollama serve'").toString().trim();
+        return !!output;
+    } catch (err) {
+        return false;
+    }
+}
+
+function iniciarOllama() {
+    if (estaRodandoOllama()) {
+        console.log("🟢 Ollama já está rodando. Não será iniciado novamente.");
+        return;
+    }
+
+    console.log("🚀 Iniciando Ollama local em segundo plano...");
+    const processo = spawn("ollama", ["serve"], {
+        detached: true,
+        stdio: "ignore",
+    });
+    processo.unref();
+}
+
 // Verifica se modelo "mistral" está instalado
 function verificarEIniciarOllama() {
     console.log("🧠 Verificando modelo 'mistral' no Ollama...");
@@ -44,12 +68,7 @@ function verificarEIniciarOllama() {
         process.exit(1);
     }
 
-    console.log("🚀 Iniciando Ollama local em segundo plano...");
-    const processo = spawn("ollama", ["serve"], {
-        detached: true,
-        stdio: "ignore",
-    });
-    processo.unref();
+    iniciarOllama();
 }
 
 let selectedChatId = null;
