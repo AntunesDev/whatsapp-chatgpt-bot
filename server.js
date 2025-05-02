@@ -28,16 +28,41 @@ client.on("qr", (qr) => {
 });
 
 client.on("ready", async () => {
-    console.log("✅ Cliente WhatsApp conectado");
+    console.log("✅ Cliente WhatsApp conectado!");
+    isWhatsappReady = true;
 
-    const chats = await client.getChats();
-    chatsDisponiveis = chats.map((chat) => ({
-        id: chat.id._serialized,
-        name: chat.name || chat.formattedTitle || chat.id.user || "Contato desconhecido",
-    }));
+    console.log("⏳ Aguardando sincronização das conversas...");
 
-    console.log(`🔍 ${chatsDisponiveis.length} conversas carregadas`);
+    // Verificador periódico
+    const syncInterval = setInterval(async () => {
+        const chats = await client.getChats();
+
+        if (chats && chats.length > 0) {
+            chatsDisponiveis = chats.map((chat) => ({
+                id: chat.id._serialized,
+                name: chat.name || chat.formattedTitle || chat.id.user || "Contato desconhecido",
+            }));
+
+            console.log(`✅ ${chatsDisponiveis.length} conversas carregadas com sucesso.`);
+
+            io.emit("lista_chats", chatsDisponiveis);
+
+            clearInterval(syncInterval); // parar verificação
+        } else {
+            console.log("📭 Nenhuma conversa carregada ainda... aguardando sincronização.");
+        }
+    }, 2000); // tenta a cada 2 segundos
 });
+
+client.on("auth_failure", (msg) => {
+    console.error("❌ Falha na autenticação:", msg);
+});
+
+client.on("disconnected", (reason) => {
+    console.warn("⚠️ Cliente desconectado:", reason);
+});
+
+client.initialize();
 
 // socket deve ficar fora do client.ready
 io.on("connection", (socket) => {
