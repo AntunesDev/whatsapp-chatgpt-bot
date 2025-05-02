@@ -2,10 +2,44 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <title>Ativar WhatsApp AI</title>
+  <title>WhatsApp AI Bot</title>
+  <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
-  <h1>WhatsApp AI Bot</h1>
-  <p>Inicie o sistema no terminal para escanear o QR Code.</p>
+  <h1>🤖 WhatsApp AI Bot</h1>
+
+  <h2>Conversas disponíveis:</h2>
+  <ul id="chat-list"></ul>
+
+  <button id="start-btn" disabled>Iniciar Respostas Automáticas</button>
+
+  <script>
+    const socket = io();
+    let chatSelecionado = null;
+
+    socket.on("lista_chats", (chats) => {
+      const ul = document.getElementById("chat-list");
+      ul.innerHTML = "";
+      chats.forEach((chat) => {
+        const li = document.createElement("li");
+        li.textContent = chat.name;
+        li.style.cursor = "pointer";
+        li.onclick = () => {
+          chatSelecionado = chat.id;
+          document.querySelectorAll("li").forEach(el => el.style.fontWeight = "normal");
+          li.style.fontWeight = "bold";
+          document.getElementById("start-btn").disabled = false;
+        };
+        ul.appendChild(li);
+      });
+    });
+
+    document.getElementById("start-btn").onclick = () => {
+      if (chatSelecionado) {
+        socket.emit("selecionar_chat", chatSelecionado);
+        alert("Chat ativado para respostas automáticas!");
+      }
+    };
+  </script>
 </body>
 </html>

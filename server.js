@@ -28,6 +28,32 @@ client.on("ready", () => {
     console.log("✅ Cliente WhatsApp pronto!");
 });
 
+let selectedChatId = null;
+let chatsDisponiveis = [];
+
+client.on("ready", async () => {
+    console.log("✅ Cliente WhatsApp pronto!");
+
+    const chats = await client.getChats();
+    chatsDisponiveis = chats.map((chat) => ({
+        id: chat.id._serialized,
+        name: chat.name || chat.formattedTitle || chat.id.user,
+    }));
+
+    // Quando um novo front-end se conecta
+    io.on("connection", (socket) => {
+        console.log("🖥️ Interface conectada");
+
+        // Envia lista de conversas ao front
+        socket.emit("lista_chats", chatsDisponiveis);
+
+        socket.on("selecionar_chat", (chatId) => {
+            console.log("📥 Chat selecionado:", chatId);
+            selectedChatId = chatId; // guardar o chat selecionado
+        });
+    });
+});
+
 client.initialize();
 
 server.listen(3000, () => {
