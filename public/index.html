@@ -5,17 +5,103 @@
   <title>WhatsApp AI Bot</title>
   <script src="/socket.io/socket.io.js"></script>
   <style>
-    li { cursor: pointer; padding: 4px; }
-    li.selected { font-weight: bold; background-color: #efefef; }
+    body {
+      font-family: sans-serif;
+      background-color: #f5f7fa;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    header {
+      background-color: #25d366;
+      color: white;
+      padding: 16px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    main {
+      flex: 1;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      max-width: 500px;
+      margin: auto;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 18px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: white;
+      overflow: auto;
+      max-height: 300px;
+    }
+
+    li {
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    li:hover {
+      background: #f0f0f0;
+    }
+
+    li.selected {
+      background-color: #d1f5e0;
+      font-weight: bold;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 12px;
+      font-size: 16px;
+      background-color: #25d366;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    button:hover:enabled {
+      background-color: #20bd5f;
+    }
+
+    .status {
+      margin-top: 10px;
+      color: #333;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
-  <h1>🤖 WhatsApp AI Bot</h1>
+  <header>🤖 WhatsApp AI Bot</header>
+  <main>
+    <h2>Selecione uma conversa:</h2>
+    <ul id="chat-list"></ul>
 
-  <h2>Conversas disponíveis:</h2>
-  <ul id="chat-list"></ul>
-
-  <button id="start-btn" disabled>Iniciar Respostas Automáticas</button>
+    <button id="start-btn" disabled>Ativar IA neste chat</button>
+    <div class="status" id="status"></div>
+  </main>
 
   <script>
     const socket = io();
@@ -40,7 +126,7 @@
     document.getElementById("start-btn").onclick = () => {
       if (chatSelecionado) {
         socket.emit("selecionar_chat", chatSelecionado);
-        alert("✅ Chat ativado para respostas automáticas.");
+        document.getElementById("status").textContent = "✅ Chat ativado para respostas automáticas.";
       }
     };
   </script>
