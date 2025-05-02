@@ -43,17 +43,17 @@ function verificarEIniciarOllama() {
 }
 
 function verificarModelo() {
-    console.log("🧠 Verificando modelo 'deepseek-coder:6.7b' no Ollama...");
+    console.log("🧠 Verificando modelo 'deepseek-chat' no Ollama...");
 
     try {
-        execSync("ollama run deepseek-coder:6.7b --dry-run", { stdio: "ignore" });
-        console.log("✅ Modelo 'deepseek-coder:6.7b' já disponível.");
+        execSync("ollama run deepseek-chat --dry-run", { stdio: "ignore" });
+        console.log("✅ Modelo 'deepseek-chat' já disponível.");
     } catch (err) {
-        console.log("📥 Modelo 'deepseek-coder:6.7b' não encontrado. Baixando...");
+        console.log("📥 Modelo 'deepseek-chat' não encontrado. Baixando...");
         try {
-            execSync("ollama pull deepseek-coder:6.7b", { stdio: "inherit" });
+            execSync("ollama pull deepseek-chat", { stdio: "inherit" });
         } catch (err) {
-            console.error("❌ Erro ao baixar modelo 'deepseek-coder:6.7b':", err.message);
+            console.error("❌ Erro ao baixar modelo 'deepseek-chat':", err.message);
             process.exit(1);
         }
     }
@@ -97,7 +97,7 @@ client.on("ready", async () => {
 
             io.emit("lista_chats", chatsDisponiveis);
 
-            clearInterval(syncInterval); // parar verificação
+            clearInterval(syncInterval);
         } else {
             console.log("📭 Nenhuma conversa carregada ainda... aguardando sincronização.");
         }
@@ -109,7 +109,11 @@ client.on("message", async (msg) => {
 
     io.emit("log_msg", { type: "received", content: msg.body });
 
-    const prompt = `${promptCustomizado}\n\nMensagem recebida no WhatsApp:\n"${msg.body}"\n\nResponda com clareza e naturalidade, da forma menos robotizada possível. Responda em português brasileiro, com liberdade para aplicar um 'sotaque' carioca onde possível.`;
+    const prompt = `${promptCustomizado}\n\nMensagem recebida no WhatsApp:\n"${msg.body}"\n\n
+    Responda de forma natural e humana como se fosse meu amigo conversando no WhatsApp.\n
+    Você não é uma IA, não diga que é um assistente ou modelo de linguagem.\n
+    Não mencione que foi treinado por ninguém. Apenas responda como uma pessoa comum.\n
+    Responda em português brasileiro.`;
 
     const resposta = await responderComOllama(prompt);
     await msg.reply(resposta);
