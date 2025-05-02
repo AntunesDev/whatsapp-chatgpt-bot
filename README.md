@@ -30,7 +30,7 @@ Este é um projeto pessoal que conecta ao seu WhatsApp localmente e responde aut
 ### 1. Clone o repositório
 
 ```shell
-git clone https://github.com/seu-usuario/whatsapp-chatgpt-bot.git cd whatsapp-chatgpt-bot
+git clone https://github.com/AntunesDev/whatsapp-ollama-bot.git cd whatsapp-ollama-bot
 ```
 
 ---
